@@ -44,5 +44,16 @@ exports.handler = (event, context) => {
                 'Access-Control-Allow-Origin': '*'
             }
         });
+    }).catch(function(error) {
+        return context.succeed({
+            statusCode: 200,
+            body: 'There was an error processing your request',
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Methods': 'POST',
+                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,XAmz-Security-Token',
+                'Access-Control-Allow-Origin': '*'
+            }
+        });
     });
 };
