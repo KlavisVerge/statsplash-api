@@ -7,6 +7,7 @@ terraform {
 variable "AWS_ACCESS_KEY" {}
 variable "AWS_SECRET_ACCESS_KEY" {}
 variable "FORTNITE_TRN_API_KEY" {}
+variable "PUBG_API_KEY" {}
 variable "API_KEY" {}
 variable "CLIENT_ID" {}
 
@@ -174,7 +175,7 @@ resource "aws_lambda_function" "contact-us-api-function" {
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/contact-us-api.handler"
   source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
-  runtime          = "nodejs6.10"
+  runtime          = "nodejs8.10"
   timeout          = 20
 }
 
@@ -222,7 +223,7 @@ resource "aws_lambda_function" "fortnite-api-function" {
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/fortnite-api.handler"
   source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
-  runtime          = "nodejs6.10"
+  runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
@@ -296,7 +297,7 @@ resource "aws_lambda_function" "league-of-legends-api-function" {
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/league-of-legends-api.handler"
   source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
-  runtime          = "nodejs6.10"
+  runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
@@ -370,7 +371,7 @@ resource "aws_lambda_function" "league-of-legends-match-api-function" {
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/league-of-legends-match-api.handler"
   source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
-  runtime          = "nodejs6.10"
+  runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
@@ -436,7 +437,7 @@ resource "aws_lambda_function" "reddit-api-function" {
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/reddit-api.handler"
   source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
-  runtime          = "nodejs6.10"
+  runtime          = "nodejs8.10"
   timeout          = 20
 }
 
@@ -567,7 +568,7 @@ resource "aws_lambda_function" "submit-an-idea-api-function" {
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/submit-an-idea-api.handler"
   source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
-  runtime          = "nodejs6.10"
+  runtime          = "nodejs8.10"
   timeout          = 20
 }
 
@@ -621,7 +622,7 @@ resource "aws_lambda_function" "twitch-api-function" {
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/twitch-api.handler"
   source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
-  runtime          = "nodejs6.10"
+  runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
@@ -638,7 +639,7 @@ resource "aws_lambda_function" "twitch-games-function" {
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/twitch-games.handler"
   source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
-  runtime          = "nodejs6.10"
+  runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
@@ -730,6 +731,73 @@ module "CORS_TWITCH_GAMES" {
 
 #twitch end
 
+#PUGB start
+resource "aws_api_gateway_resource" "pubg-api-resource" {
+  rest_api_id = "${aws_api_gateway_rest_api.api.id}"
+  parent_id   = "${aws_api_gateway_rest_api.api.root_resource_id}"
+  path_part   = "pubg-api"
+}
+
+resource "aws_lambda_function" "pubg-api-function" {
+  filename      = "statsplash-api.zip"
+  function_name = "pubg-api"
+
+  role             = "${data.aws_iam_role.role.arn}"
+  handler          = "src/pubg-api.handler"
+  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  runtime          = "nodejs8.10"
+  timeout          = 20
+
+  environment {
+    variables {
+      PUBG_API_KEY = "${var.PUBG_API_KEY}"
+    }
+  }
+}
+
+resource "aws_lambda_permission" "pubg-permission" {
+  function_name = "${aws_lambda_function.pubg-api-function.function_name}"
+  statement_id  = "AllowExecutionFromApiGateway"
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+}
+
+resource "aws_api_gateway_method" "pubg-api-method-get" {
+  rest_api_id          = "${aws_api_gateway_rest_api.api.id}"
+  resource_id          = "${aws_api_gateway_resource.pubg-api-resource.id}"
+  http_method          = "GET"
+  authorization        = "NONE"
+  request_validator_id = "${aws_api_gateway_request_validator.pubg.id}"
+
+  request_parameters = {
+    "method.request.querystring.region" = true,
+    "method.request.querystring.playerName" = true
+  }
+}
+
+resource "aws_api_gateway_request_validator" "pubg" {
+  name                        = "pubg_validator"
+  rest_api_id                 = "${aws_api_gateway_rest_api.api.id}"
+  validate_request_parameters = true
+}
+
+resource "aws_api_gateway_integration" "pubg-api-integration" {
+  rest_api_id             = "${aws_api_gateway_rest_api.api.id}"
+  resource_id             = "${aws_api_gateway_resource.pubg-api-resource.id}"
+  http_method             = "GET"
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "${aws_lambda_function.pubg-api-function.invoke_arn}"
+}
+
+module "CORS_PUBG" {
+  source      = "github.com/carrot/terraform-api-gateway-cors-module"
+  resource_id = "${aws_api_gateway_resource.pubg-api-resource.id}"
+  rest_api_id = "${aws_api_gateway_rest_api.api.id}"
+}
+
+#PUBG end
+
 resource "aws_api_gateway_deployment" "APIs" {
   depends_on = [
     "aws_api_gateway_integration_response.health",
@@ -741,6 +809,7 @@ resource "aws_api_gateway_deployment" "APIs" {
     "aws_api_gateway_integration.submit-an-idea-api-integration",
     "aws_api_gateway_integration.twitch-api-integration",
     "aws_api_gateway_integration.twitch-games-api-integration",
+    "aws_api_gateway_integration.pubg-api-integration",
   ]
 
   rest_api_id       = "${aws_api_gateway_rest_api.api.id}"
