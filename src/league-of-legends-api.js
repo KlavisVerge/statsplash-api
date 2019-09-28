@@ -5,7 +5,7 @@ AWS.config.update({region: 'us-east-1'});
 exports.handler = (event, context) => {
     let promises = [];
     let options = {
-        url: 'https://na.api.riotgames.com/lol/summoner/v3/summoners/by-name/' + event.queryStringParameters.summonerName + '?api_key=' + process.env.API_KEY // this gives summoner level basically and accountId, id is summoner id
+        url: 'https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + event.queryStringParameters.summonerName + '?api_key=' + process.env.API_KEY // this gives summoner level basically and accountId, id is summoner id
     };
     promises.push(request(options).promise().then((res) => {
         return res;
@@ -13,17 +13,13 @@ exports.handler = (event, context) => {
         return undefined;
     }));
 
-    options = {
-        url: 'https://na1.api.riotgames.com/lol/summoner/v3/summoners/by-name/' + event.queryStringParameters.summonerName + '?api_key=' + process.env.API_KEY // this gives summoner level basically and accountId, id is summoner id
-    };
-    promises.push(request(options).promise().then((res) => {
-        return res;
-    }).catch(function (err) {
-        return undefined;
-    }));
+    let otherRegions = event.queryStringParameters.region;
+    if('na' === otherRegions){
+        otherRegions = 'na1';
+    }
 
     options = {
-        url: 'https://' + event.queryStringParameters.region + '.api.riotgames.com/lol/summoner/v3/summoners/by-name/' + event.queryStringParameters.summonerName + '?api_key=' + process.env.API_KEY // this gives summoner level basically and accountId, id is summoner id
+        url: 'https://' + otherRegions + '.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + event.queryStringParameters.summonerName + '?api_key=' + process.env.API_KEY // this gives summoner level basically and accountId, id is summoner id
     };
     promises.push(request(options).promise().then((res) => {
         return res;
@@ -45,18 +41,14 @@ exports.handler = (event, context) => {
     }));
 
     return Promise.all(promises).then((responses) => {
-        const [na, na1, rest, realms] = responses;
+        const [na1, rest, realms] = responses;
+
         let region = '';
         let results = '';
         if(event.queryStringParameters.region === 'na'){
-            if(na !== undefined){
-                region = 'na';
-                results = JSON.parse(na);
-            } else {
-                region = 'na1';
-                if(na1 !== undefined){
-                    results = JSON.parse(na1);
-                }
+            region = 'na1';
+            if(na1 !== undefined){
+                results = JSON.parse(na1);
             }
         } else {
             region = event.queryStringParameters.region;
@@ -79,7 +71,7 @@ exports.handler = (event, context) => {
         }
         let promises = [];
         let options = {
-            url: 'https://' + region + '.api.riotgames.com/lol/match/v3/matchlists/by-account/' + results.accountId + '?api_key=' + process.env.API_KEY
+            url: 'https://' + region + '.api.riotgames.com/lol/match/v4/matchlists/by-account/' + results.accountId + '?api_key=' + process.env.API_KEY
         };
         promises.push(request(options).promise().then((res) => {
             return res;
@@ -91,7 +83,7 @@ exports.handler = (event, context) => {
         }));
 
         options = {
-            url: 'https://' + region + '.api.riotgames.com/lol/league/v3/positions/by-summoner/' + results.id + '?api_key=' + process.env.API_KEY
+            url: 'https://' + region + '.api.riotgames.com/lol/league/v4/entries/by-summoner/' + results.id + '?api_key=' + process.env.API_KEY
         };
         promises.push(request(options).promise().then((res) => {
             return res;
@@ -115,6 +107,7 @@ exports.handler = (event, context) => {
         }));
 
         return Promise.all(promises).then((responses) => {
+            console.log('last promise: ' + JSON.stringify(responses));
             let[matchList, positions, allChampions] = responses;
             let matchesProcessed = JSON.parse(matchList);
             allChampions = JSON.parse(allChampions);
@@ -153,6 +146,7 @@ exports.handler = (event, context) => {
             });
         });
     }).catch(function(error) {
+        console.log('error: ' + JSON.stringify(error));
         return context.succeed({
             statusCode: 200,
             body: 'There was an error processing your request',
