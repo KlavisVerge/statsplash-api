@@ -174,7 +174,7 @@ resource "aws_lambda_function" "contact-us-api-function" {
 
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/contact-us-api.handler"
-  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  source_code_hash = "${filebase64sha256("statsplash-api.zip")}"
   runtime          = "nodejs8.10"
   timeout          = 20
 }
@@ -222,12 +222,12 @@ resource "aws_lambda_function" "fortnite-api-function" {
 
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/fortnite-api.handler"
-  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  source_code_hash = "${filebase64sha256("statsplash-api.zip")}"
   runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
-    variables {
+    variables = {
       FORTNITE_TRN_API_KEY = "${var.FORTNITE_TRN_API_KEY}"
     }
   }
@@ -260,7 +260,7 @@ resource "aws_api_gateway_request_validator" "fortnite" {
   validate_request_parameters = true
 }
 
-resource "aws_api_gateway_method_response" "200-fortnite" {
+resource "aws_api_gateway_method_response" "two-hundred-fortnite" {
   rest_api_id = "${aws_api_gateway_rest_api.api.id}"
   resource_id = "${aws_api_gateway_resource.fortnite-api-resource.id}"
   http_method = "GET"
@@ -296,12 +296,12 @@ resource "aws_lambda_function" "league-of-legends-api-function" {
 
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/league-of-legends-api.handler"
-  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  source_code_hash = "${filebase64sha256("statsplash-api.zip")}"
   runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
-    variables {
+    variables = {
       API_KEY = "${var.API_KEY}"
     }
   }
@@ -334,7 +334,7 @@ resource "aws_api_gateway_request_validator" "league-of-legends" {
   validate_request_parameters = true
 }
 
-resource "aws_api_gateway_method_response" "200-league-of-legends" {
+resource "aws_api_gateway_method_response" "two-hundred-league-of-legends" {
   rest_api_id = "${aws_api_gateway_rest_api.api.id}"
   resource_id = "${aws_api_gateway_resource.league-of-legends-api-resource.id}"
   http_method = "GET"
@@ -370,12 +370,12 @@ resource "aws_lambda_function" "league-of-legends-match-api-function" {
 
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/league-of-legends-match-api.handler"
-  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  source_code_hash = "${filebase64sha256("statsplash-api.zip")}"
   runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
-    variables {
+    variables = {
       API_KEY = "${var.API_KEY}"
     }
   }
@@ -436,7 +436,7 @@ resource "aws_lambda_function" "reddit-api-function" {
 
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/reddit-api.handler"
-  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  source_code_hash = "${filebase64sha256("statsplash-api.zip")}"
   runtime          = "nodejs8.10"
   timeout          = 20
 }
@@ -567,7 +567,7 @@ resource "aws_lambda_function" "submit-an-idea-api-function" {
 
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/submit-an-idea-api.handler"
-  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  source_code_hash = "${filebase64sha256("statsplash-api.zip")}"
   runtime          = "nodejs8.10"
   timeout          = 20
 }
@@ -621,12 +621,12 @@ resource "aws_lambda_function" "twitch-api-function" {
 
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/twitch-api.handler"
-  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  source_code_hash = "${filebase64sha256("statsplash-api.zip")}"
   runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
-    variables {
+    variables = {
       CLIENT_ID = "${var.CLIENT_ID}"
     }
   }
@@ -638,12 +638,12 @@ resource "aws_lambda_function" "twitch-games-function" {
 
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/twitch-games.handler"
-  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  source_code_hash = "${filebase64sha256("statsplash-api.zip")}"
   runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
-    variables {
+    variables = {
       CLIENT_ID = "${var.CLIENT_ID}"
     }
   }
@@ -744,12 +744,12 @@ resource "aws_lambda_function" "pubg-api-function" {
 
   role             = "${data.aws_iam_role.role.arn}"
   handler          = "src/pubg-api.handler"
-  source_code_hash = "${base64sha256(file("statsplash-api.zip"))}"
+  source_code_hash = "${filebase64sha256("statsplash-api.zip")}"
   runtime          = "nodejs8.10"
   timeout          = 20
 
   environment {
-    variables {
+    variables = {
       PUBG_API_KEY = "${var.PUBG_API_KEY}"
     }
   }

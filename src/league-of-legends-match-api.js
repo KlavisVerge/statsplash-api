@@ -6,7 +6,7 @@ exports.handler = (event, context) => {
     let promises = [];
 
     let options = {
-        url: 'https://' + event.queryStringParameters.region.toLowerCase() + '.api.riotgames.com/lol/match/v3/matches/' + event.queryStringParameters.gameId + '?api_key=' + process.env.API_KEY
+        url: 'https://' + event.queryStringParameters.region.toLowerCase() + '.api.riotgames.com/lol/match/v4/matches/' + event.queryStringParameters.gameId + '?api_key=' + process.env.API_KEY
     };
 
     promises.push(request(options).promise().then((res) => {
